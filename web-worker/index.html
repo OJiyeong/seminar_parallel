@@ -2,90 +2,211 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Worker vs Non-Worker Performance</title>
+    <meta charset="UTF-8">
+    <title>Video Blur with Web Worker</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎯 Web Worker Performance Comparison</h1>
-            <p>실시간 비디오 프레임 블러 처리 성능 비교</p>
+        <header class="header">
+            <h1 class="title">🎥 Web Worker Performance Lab</h1>
+            <p class="subtitle">실시간 블러 처리 비교: Main Thread vs Web Worker</p>
+        </header>
+
+        <div class="controls">
+            <button id="toggleBtn" class="toggle-btn">
+                모드: Web Worker
+            </button>
+
+            <label class="upload-label"> 영상 업로드:
+                <input type="file" id="upload" accept="video/*" class="upload-input" />
+            </label>
         </div>
 
+        <!-- 비디오 섹션 -->
         <div class="video-section">
+            <!-- 원본 비디오 -->
             <div class="video-container">
-                <video id="video" width="540" height="304" autoplay muted loop>
-                    <source src="폴더에 동영상 원하는거 넣어서 테스트(용량클수록좋음).mp4" type="video/mp4" />
-                    브라우저가 video 태그를 지원하지 않습니다.
+                <h3 class="section-title">📷 원본 비디오</h3>
+                <video id="video" autoplay muted loop playsinline style="display: none;">
                 </video>
+                <p id="placeholderText" class="placeholder-text">🎬 영상 파일을 업로드 해주세요</p>
+            </div>
+
+            <!-- 처리된 결과 -->
+            <div class="canvas-container">
+                <h3 class="section-title">✨ 처리된 결과</h3>
+                <canvas id="outputCanvas"></canvas>
             </div>
         </div>
 
-        <div class="comparison-grid">
-            <div class="comparison-item worker">
-                <div class="comparison-title">
-                    <span class="icon">⚡</span>
-                    Web Worker 처리
-                </div>
-                <div class="canvas-container">
-                    <canvas id="workerCanvas" width="540" height="304"></canvas>
-                    <div class="stats-overlay" id="workerStats">
-                        <div>처리 시간: - ms</div>
-                        <div>FPS: -</div>
-                    </div>
-                </div>
-                <canvas id="graphWorker" width="540" height="100" class="graph-canvas"></canvas>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color line" style="--color: #0077cc;"></div>
-                        <span>처리 시간</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color avg"></div>
-                        <span>평균값</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color std"></div>
-                        <span>표준편차 영역</span>
-                    </div>
-                </div>
-            </div>
+        <!-- 성능 통계 섹션 -->
+        <div class="stats-section">
+            <h2 class="stats-title">📊 실시간 성능 분석</h2>
 
-            <div class="comparison-item non-worker">
-                <div class="comparison-title">
-                    <span class="icon">🐌</span>
-                    Non-Worker 처리
-                </div>
-                <div class="canvas-container">
-                    <canvas id="nonworkerCanvas" width="540" height="304"></canvas>
-                    <div class="stats-overlay" id="nonworkerStats">
-                        <div>처리 시간: - ms</div>
-                        <div>FPS: -</div>
+            <div class="main-layout">
+                <!-- 그래프 세션 -->
+                <div class="graph-session">
+                    <canvas id="perfCanvas"></canvas>
+
+                    <div class="performance-indicator">
+                        <div class="indicator">
+                            <div class="indicator-value" id="avgTimeValue">50.6</div>
+                            <div class="indicator-label">평균 처리시간 (ms)</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-value" id="fpsText">-</div>
+                            <div class="indicator-label">FPS</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-value" id="processedFrames">117</div>
+                            <div class="indicator-label">처리된 프레임</div>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color worker-color"></div>
+                            <span>Worker 모드</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color non-worker-color"></div>
+                            <span>Non-Worker 모드</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color avg-color"></div>
+                            <span>평균값</span>
+                        </div>
                     </div>
                 </div>
-                <canvas id="graphNonWorker" width="540" height="100" class="graph-canvas"></canvas>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color line" style="--color: #cc0000;"></div>
-                        <span>처리 시간</span>
+
+                <!-- 설명 세션 -->
+                <div class="info-session">
+                    <!-- 설명 패널 -->
+                    <div class="info-panel">
+                        <h3 class="info-title">📋 지표 설명</h3>
+                        <div class="info-item">
+                            <strong>📈 평균 처리 시간:</strong> 한 프레임에 블러 효과를 적용하는 데 걸린 시간의 평균 (ms 단위)
+                        </div>
+                        <div class="info-item">
+                            <strong>🎯 FPS:</strong> 초당 처리 가능한 프레임 수
+                        </div>
+                        <div class="info-item">
+                            <strong>🧮 처리된 프레임 수:</strong> 측정이 시작된 이후 현재까지 처리한 총 프레임 수
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-color avg"></div>
-                        <span>평균값</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color std"></div>
-                        <span>표준편차 영역</span>
+
+                    <!-- 토글 가능한 분석 정보 -->
+                    <div class="analysis-toggle">
+                        <button id="analysisToggle" class="analysis-btn">
+                            📈 그래프 분석 도움말
+                        </button>
+                        <div id="analysisContent" class="analysis-content hidden">
+                            <div class="analysis-list">
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">🔼</div>
+                                    <div class="analysis-text">
+                                        <h4>그래프가 위로 치솟을 때</h4>
+                                        <p>프레임 처리 시간이 길어져서 성능이 일시적으로 저하됩니다. (예: 버벅임, 부하 증가)</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">🔽</div>
+                                    <div class="analysis-text">
+                                        <h4>그래프가 아래로 안정적으로 유지될 때</h4>
+                                        <p>프레임 처리 시간이 짧고 일정해서 성능이 안정적이고 효율적으로 동작 중입니다.</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">⚠️</div>
+                                    <div class="analysis-text">
+                                        <h4>그래프가 들쭉날쭉할 때</h4>
+                                        <p>프레임마다 처리 시간이 불안정해서 외부 요인(로딩, CPU 점유 등)의 영향을 받고 있습니다.</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">📈</div>
+                                    <div class="analysis-text">
+                                        <h4>평균선보다 위쪽일 때</h4>
+                                        <p>평균보다 처리 시간이 많이 걸려서 성능이 전체적으로 낮거나 일시적 부하가 있습니다.</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">📉</div>
+                                    <div class="analysis-text">
+                                        <h4>평균선보다 아래쪽일 때</h4>
+                                        <p>평균보다 빠른 처리로 매우 효율적이며 FPS가 높게 유지됩니다.</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-item">
+                                    <div class="analysis-icon">🌀</div>
+                                    <div class="analysis-text">
+                                        <h4>처음 영상 로드 했을 때 평균 처리 시간이 매우 높게 나오는 이유</h4>
+                                        <p>영상 파일을 처음 불러올 때 브라우저는 비디오를 디코딩하고 화면에 표시하기 위한 초기 로딩을 진행하며,
+                                            이 과정에서 리소스를 많이 소모한다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="main.js"></script>
+    <!-- 파일 업로드 스크립트 -->
+    <script type="module">
+        const upload = document.getElementById('upload');
+        const video = document.getElementById('video');
+        const placeholder = document.getElementById('placeholderText');
+
+        let currentURL = null; // 현재 blob URL 저장용
+
+        upload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // 이전 URL이 있으면 메모리 해제
+                if (currentURL) {
+                    URL.revokeObjectURL(currentURL);
+                }
+
+                // 새 URL 생성 및 재생
+                currentURL = URL.createObjectURL(file);
+                video.src = currentURL;
+                video.load();
+                video.play();
+
+                // 비디오 표시, 플레이스홀더 숨김
+                video.style.display = 'block';
+                placeholder.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <!-- 메인 로직 -->
+    <script type="module" src="main.js"></script>
+
+    <!-- 토글 기능 -->
+    <script>
+        document.getElementById('analysisToggle').addEventListener('click', function () {
+            const content = document.getElementById('analysisContent');
+            const btn = this;
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                btn.textContent = '📈 그래프 분석 도움말 (닫기)';
+            } else {
+                content.classList.add('hidden');
+                btn.textContent = '📈 그래프 분석 도움말';
+            }
+        });
+    </script>
 </body>
 
 </html>
