@@ -34,6 +34,9 @@ video.addEventListener('loadeddata', () => {
 toggleBtn.onclick = () => {
     useWorker = !useWorker;
     toggleBtn.textContent = useWorker ? '모드: Web Worker' : '모드: Main Thread';
+    toggleBtn.style.background = useWorker
+        ? 'linear-gradient(135deg, #5271ff, #4a63e6)'
+        : 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
     isProcessing = false;
     latestFrame = null;
 };

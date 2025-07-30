@@ -1,7 +1,7 @@
 export function applyGaussianBlur(imageData) {
     const { width, height, data } = imageData;
 
-    const radius = 4;
+    const radius = 5;
     const sigma = radius / 2;
     const kernel = generateGaussianKernel(radius, sigma);
 
